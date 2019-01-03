@@ -1,0 +1,140 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+
+    <changeSet id="create-role-table" author="Tobi Olanrewaju">
+        <createTable tableName="roles">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR(60)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-user-table" author="Tobi Olanrewaju">
+        <createTable tableName="users">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="username" type="VARCHAR(50)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(50)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="password" type="VARCHAR(100)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-user-roles-join-table" author="Tobi Olanrewaju">
+        <createTable tableName="user_roles">
+            <column name="user_id" type="BIGINT">
+                <constraints primaryKey="true" foreignKeyName="fk_user_roles_user_id" references="users(id)"/>
+            </column>
+            <column name="role_id" type="BIGINT">
+                <constraints primaryKey="true" foreignKeyName="fk_user_roles_role_id" references="roles(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="seed-role-data" author="Tobi Olanrewaju" >
+        <preConditions onFail="HALT">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM roles</sqlCheck>
+        </preConditions>
+        <loadData file="classpath:migrations/roles.csv" tableName="roles"/>
+    </changeSet>
+
+    <changeSet id="create-polls-table" author="Tobi Olanrewaju">
+        <createTable tableName="polls">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="question" type="VARCHAR(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="expirate_date_time" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="createdBy" type="BIGINT" />
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_by" type="BIGINT" />
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-choices-table" author="Tobi Olanrewaju">
+        <createTable tableName="choices">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="text" type="VARCHAR(50)">
+                <constraints nullable="false" />
+            </column>
+            <column name="poll_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_choices_poll_id" references="polls(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-votes-table" author="Tobi Olanrewaju">
+        <createTable tableName="votes">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="poll_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_votes_poll_id" references="polls(id)"/>
+            </column>
+            <column name="choice_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_votes_choice_id" references="choices(id)"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_votes_user_id" references="users(id)"/>
+            </column>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint
+                columnNames="poll_id, user_id"
+                constraintName="index_poll_id_user_id"
+                tableName="votes"
+        />
+    </changeSet>
+
+    <changeSet id="add-audit-columns-to-users-table" author="Tobi Olanrewaju">
+        <addColumn tableName="users">
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="alter-polls-table-change-createdBy-to-created_by" author="Tobi Olanrewaju">
+        <renameColumn tableName="polls" oldColumnName="createdBy" newColumnName="created_by" columnDataType="BIGINT"/>
+    </changeSet>
+
+    <changeSet id="alter-polls-table-change-expirate_date_time-to-expiration_date_time" author="Tobi Olanrewaju">
+        <renameColumn tableName="polls" oldColumnName="expirate_date_time" newColumnName="expiration_date_time" columnDataType="datetime"/>
+    </changeSet>
+</databaseChangeLog>
